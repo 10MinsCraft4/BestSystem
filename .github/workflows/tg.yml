@@ -19,15 +19,25 @@ jobs:
           git archive -o $ZIP_NAME HEAD
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
 
-      - name: Send ZIP
+      - name: Check commit info
+        id: check_commit
+        run: |
+          COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
+          if echo "$COMMIT_MESSAGE" | grep -qiE "release|version"; then
+            echo "SKIP=true" >> $GITHUB_ENV
+          else
+            echo "SKIP=false" >> $GITHUB_ENV
+          fi
+
+      - name: ZIP
+        if: env.SKIP == 'false'
         env:
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: |
           curl -F chat_id="-4738544022" \
                -F document=@"$ZIP_NAME" \
-               -F caption="🚀 *New push to repository!*
-          Repository: \`${{ github.repository }}\`
-          Branch: \`${{ github.ref_name }}\`
+               -F caption="⚙️ *New test release!*
           Commit: \`${{ github.event.head_commit.message }}\`
+          [View Commit](${{ github.event.head_commit.url }})
           " -F parse_mode="Markdown" \
           "https://api.telegram.org/bot$BOT_TOKEN/sendDocument"
