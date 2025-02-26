@@ -22,19 +22,20 @@ jobs:
       - name: Check commit info
         id: check_commit
         run: |
-          COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
-          if echo "$COMMIT_MESSAGE" | grep -qiE "release|version"; then
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          if echo "$COMMIT_MSG" | grep -qiE "release|version"; then
             echo "SKIP=true" >> $GITHUB_ENV
           else
             echo "SKIP=false" >> $GITHUB_ENV
           fi
 
-      - name: ZIP
+      - name: Send ZIP
         if: env.SKIP == 'false'
         env:
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: |
-          curl -F chat_id="-4738544022" \
+          curl -F chat_id="-1002258961586" \
+               -F message_thread_id="3" \
                -F document=@"$ZIP_NAME" \
                -F caption="⚙️ *New test release!*
           Commit: \`${{ github.event.head_commit.message }}\`
